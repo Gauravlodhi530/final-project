@@ -5,7 +5,7 @@ require("dotenv").config();
 if (process.env.NODE_ENV === 'test') {
   module.exports = {
     // minimal stub if needed in code paths
-    on: () => {},
+    on: (event, cb) => {},
     quit: async () => {},
     set: async () => {},
   };
@@ -18,6 +18,12 @@ if (process.env.NODE_ENV === 'test') {
 
   redis.on("connect", () => {
     console.log("Redis Database is connected 😎");
+  });
+
+  // Handle Redis errors to avoid unhandled exception crashes (e.g. DNS failures)
+  redis.on('error', (err) => {
+    // Log the error message; do not rethrow to prevent process from crashing.
+    console.error('[ioredis] Unhandled error event:', err && err.message ? err.message : err);
   });
 
   module.exports = redis;

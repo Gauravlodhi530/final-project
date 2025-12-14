@@ -1,0 +1,46 @@
+  console.log
+    [dotenv@17.2.3] injecting env (8) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:142:11)
+
+  console.log
+    [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (node_modules/dotenv/lib/main.js:142:11)
+
+PASS src/test/product.routes.test.js (15.634 s)
+  POST /api/products
+    Valid requests
+      √ should create a product without images (449 ms)
+      √ should create a product with images (135 ms)
+      √ should create a product with INR currency as default (57 ms)
+    Validation errors
+      √ should return 400 when title is missing (46 ms)
+      √ should return 400 when price is missing (33 ms)
+      √ should return 400 when price amount is missing (49 ms)
+    Invalid currency
+      √ should return 400 for invalid currency (59 ms)
+    File upload validation
+      √ should reject non-image files (35 ms)
+      √ should reject files larger than 5MB (146 ms)
+    JSON price format
+      √ should parse JSON string price (42 ms)
+      √ should return 400 for invalid JSON price (22 ms)
+  GET /api/products
+    √ should return empty array when no products exist (52 ms)
+    √ should return all products (54 ms)
+    √ should filter products by search query (87 ms)
+    √ should filter products by minimum price (40 ms)
+    √ should filter products by maximum price (31 ms)
+    √ should handle pagination with skip and limit (90 ms)
+    √ should limit results to 20 even if higher limit is requested (227 ms)
+  GET /api/products/:id
+    √ should return a product when valid ID is provided (47 ms)
+    √ should return 404 when product does not exist (35 ms)
+    √ should return 404 for invalid ObjectId format (21 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        16.075 s, estimated 30 s
+Ran all test suites matching .
