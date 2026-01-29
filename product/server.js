@@ -5,7 +5,7 @@ const { connectDB } = require("./src/setup/database");
 try {
   connectDB();
   app.listen(3001, () => {
-    console.log("Product service listening on port 3001");
+    console.log("Product service listening on http://localhost:3001");
   });
 } catch (error) {
   console.error("Failed to start server:", error);

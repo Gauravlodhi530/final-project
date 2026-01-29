@@ -6,5 +6,5 @@ connectToDB()
 
 
 app.listen(3002, () => {
-    console.log(`Cart service is running on port 3002`);
+    console.log(`Cart service is running on http://localhost:3002`);
 });

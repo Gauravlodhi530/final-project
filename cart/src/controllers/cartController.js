@@ -1,5 +1,4 @@
-const cartModel = require('../models/cart.model');
-
+const cartModel = require("../models/cart.model");
 
 // Cart Controller
 let cart = {};
@@ -10,17 +9,19 @@ const resetCart = () => {
 };
 
 // GET /cart - Fetch current cart
-const getCart = (req, res) => {
+const getCart = async (req, res) => {
   try {
+    const user = req.user;
+    const totalCart = await cartModel.findOne({ user: user.id });
     res.status(200).json({
       success: true,
-      data: cart,
-      message: 'Cart retrieved successfully'
+      cart: totalCart || { items: [] },
+      message: "Cart retrieved successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -31,12 +32,14 @@ async function addItemToCart(req, res) {
     const { productId, qty } = req.body;
 
     const user = req.user;
-     
-    let cart = await cartModel.findOne({ user: user._id });
+
+    let cart = await cartModel.findOne({ user: user.id });
     if (!cart) {
-      cart = new cartModel({ user: user._id, items: [] });
+      cart = new cartModel({ user: user.id, items: [] });
     }
-    const existingItemIndex = cart.items.findIndex(item => item.productId === productId);
+    const existingItemIndex = cart.items.findIndex(
+      (item) => item.productId === productId,
+    );
     if (existingItemIndex >= 0) {
       cart.items[existingItemIndex].qty += qty;
     } else {
@@ -44,20 +47,18 @@ async function addItemToCart(req, res) {
     }
     await cart.save();
 
-   
-
     res.status(201).json({
       success: true,
       cart,
-      message: 'Item added to cart'
+      message: "Item added to cart",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
-};
+}
 
 // PATCH /cart/items/:productId - Update item quantity
 const updateItemQuantity = (req, res) => {
@@ -68,14 +69,14 @@ const updateItemQuantity = (req, res) => {
     if (!cart[productId]) {
       return res.status(404).json({
         success: false,
-        message: 'Item not found in cart'
+        message: "Item not found in cart",
       });
     }
 
     if (qty === undefined) {
       return res.status(400).json({
         success: false,
-        message: 'qty is required'
+        message: "qty is required",
       });
     }
 
@@ -83,7 +84,7 @@ const updateItemQuantity = (req, res) => {
       delete cart[productId];
       return res.status(200).json({
         success: true,
-        message: 'Item removed from cart'
+        message: "Item removed from cart",
       });
     }
 
@@ -92,12 +93,12 @@ const updateItemQuantity = (req, res) => {
     res.status(200).json({
       success: true,
       data: cart[productId],
-      message: 'Item quantity updated'
+      message: "Item quantity updated",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -110,7 +111,7 @@ const removeItemFromCart = (req, res) => {
     if (!cart[productId]) {
       return res.status(404).json({
         success: false,
-        message: 'Item not found in cart'
+        message: "Item not found in cart",
       });
     }
 
@@ -118,12 +119,12 @@ const removeItemFromCart = (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Item removed from cart'
+      message: "Item removed from cart",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -135,12 +136,12 @@ const clearCart = (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Cart cleared'
+      message: "Cart cleared",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -151,5 +152,5 @@ module.exports = {
   updateItemQuantity,
   removeItemFromCart,
   clearCart,
-  resetCart
+  resetCart,
 };

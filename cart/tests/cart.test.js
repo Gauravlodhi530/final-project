@@ -54,7 +54,7 @@ describe('Cart Service API', () => {
       const res = await request(app)
         .post('/api/cart/items')
         .set('Authorization', `Bearer ${authToken}`)
-        .send({ productId: productId1, qty: 3 });
+        .send({ productId: productId1, qty: 2 });
 
       expect(res.statusCode).toBe(201);
       expect(res.body.success).toBe(true);
@@ -162,6 +162,7 @@ describe('Cart Service API', () => {
     it('should remove item if qty is set to 0', async () => {
       const res = await request(app)
         .patch(`/api/cart/items/${productId1}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ qty: 0 });
 
       expect(res.statusCode).toBe(200);
@@ -169,13 +170,15 @@ describe('Cart Service API', () => {
       expect(res.body.message).toBe('Item removed from cart');
 
       // Verify item is removed
-      const cartRes = await request(app).get('/api/cart');
+      const cartRes = await request(app).get('/api/cart')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(cartRes.body.data[productId1]).toBeUndefined();
     });
 
     it('should remove item if qty is negative', async () => {
       const res = await request(app)
         .patch(`/api/cart/items/${productId1}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ qty: -5 });
 
       expect(res.statusCode).toBe(200);
@@ -185,6 +188,7 @@ describe('Cart Service API', () => {
     it('should return 404 if item not in cart', async () => {
       const res = await request(app)
         .patch(`/api/cart/items/NONEXISTENT`)
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ qty: 5 });
 
       expect(res.statusCode).toBe(404);
@@ -195,6 +199,7 @@ describe('Cart Service API', () => {
     it('should return 400 if qty is not provided', async () => {
       const res = await request(app)
         .patch(`/api/cart/items/${productId1}`)
+        .set('Authorization', `Bearer ${authToken}`)
         .send({});
 
       expect(res.statusCode).toBe(400);
@@ -209,29 +214,34 @@ describe('Cart Service API', () => {
       // Add items to cart before each test
       await request(app)
         .post('/api/cart/items')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ productId: productId1, qty: 2 });
       await request(app)
         .post('/api/cart/items')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ productId: productId2, qty: 3 });
     });
 
     it('should remove an item from the cart', async () => {
       const res = await request(app)
-        .delete(`/api/cart/items/${productId1}`);
+        .delete(`/api/cart/items/${productId1}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Item removed from cart');
 
       // Verify item is removed
-      const cartRes = await request(app).get('/api/cart');
+      const cartRes = await request(app).get('/api/cart')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(cartRes.body.data[productId1]).toBeUndefined();
       expect(cartRes.body.data[productId2]).toBeDefined();
     });
 
     it('should return 404 if item not in cart', async () => {
       const res = await request(app)
-        .delete(`/api/cart/items/NONEXISTENT`);
+        .delete(`/api/cart/items/NONEXISTENT`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.statusCode).toBe(404);
       expect(res.body.success).toBe(false);
@@ -240,15 +250,18 @@ describe('Cart Service API', () => {
 
     it('should remove multiple items independently', async () => {
       // Remove first item
-      await request(app).delete(`/api/cart/items/${productId1}`);
+      await request(app).delete(`/api/cart/items/${productId1}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       // Remove second item
-      const res = await request(app).delete(`/api/cart/items/${productId2}`);
+      const res = await request(app).delete(`/api/cart/items/${productId2}`)
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.statusCode).toBe(200);
 
       // Verify cart is empty
-      const cartRes = await request(app).get('/api/cart');
+      const cartRes = await request(app).get('/api/cart')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(Object.keys(cartRes.body.data)).toHaveLength(0);
     });
   });
@@ -259,28 +272,34 @@ describe('Cart Service API', () => {
       // Add multiple items to cart before each test
       await request(app)
         .post('/api/cart/items')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ productId: productId1, qty: 2 });
       await request(app)
         .post('/api/cart/items')
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ productId: productId2, qty: 3 });
     });
 
     it('should clear the entire cart', async () => {
-      const res = await request(app).delete('/api/cart');
+      const res = await request(app).delete('/api/cart')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe('Cart cleared');
 
       // Verify cart is empty
-      const cartRes = await request(app).get('/api/cart');
+      const cartRes = await request(app).get('/api/cart')
+        .set('Authorization', `Bearer ${authToken}`);
       expect(cartRes.body.data).toEqual({});
     });
 
     it('should clear cart even if already empty', async () => {
       // Clear cart twice
-      await request(app).delete('/api/cart');
-      const res = await request(app).delete('/api/cart');
+      await request(app).delete('/api/cart')
+        .set('Authorization', `Bearer ${authToken}`);
+      const res = await request(app).delete('/api/cart')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
