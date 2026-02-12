@@ -8,7 +8,6 @@ const addressSchema = new mongoose.Schema({
   state: String,
   pincode: String,
   country: String,
-  isDefault: { type: Boolean, default: false }
 });
 const orderSchema = new mongoose.Schema({
   user: {

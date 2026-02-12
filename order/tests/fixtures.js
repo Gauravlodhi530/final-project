@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Order = require('../src/models/Order');
+const Order = require('../src/models/order.model');
 
 async function createMockOrder(overrides = {}) {
   const defaults = {

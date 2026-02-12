@@ -21,7 +21,6 @@ router.post(
 router.get("/", productController.getProducts);
 
 
-
 //PATCH /products/:id
 router.patch("/:id", createAuthMiddleware(["seller"]), productController.updateProduct);
 

@@ -454,6 +454,31 @@ describe('GET /api/products/:id', () => {
     expect(response.body.success).toBe(false)
     expect(response.body.message).toBe('Product not found')
   })
+
+  it('should return a product with images when valid ID is provided', async () => {
+    const productWithImages = await Product.create({
+      title: 'Product with Images',
+      description: 'Description with images',
+      price: { amount: 150, currency: 'USD' },
+      seller: new mongoose.Types.ObjectId(),
+      images: [
+        { url: 'https://example.com/image1.jpg', thumbnail: 'https://example.com/thumb1.jpg' },
+        { url: 'https://example.com/image2.jpg', thumbnail: 'https://example.com/thumb2.jpg' }
+      ]
+    })
+
+    const response = await request(app)
+      .get(`/api/products/${productWithImages._id}`)
+      .expect(200)
+
+    expect(response.body.success).toBe(true)
+    expect(response.body.message).toBe('Product fetched successfully')
+    expect(response.body.product).toHaveProperty('_id')
+    expect(response.body.product.title).toBe('Product with Images')
+    expect(response.body.product.images).toHaveLength(2)
+    expect(response.body.product.images[0]).toHaveProperty('url')
+    expect(response.body.product.images[0]).toHaveProperty('thumbnail')
+  })
 })
 
 describe('PATCH /api/products/:id', () => {

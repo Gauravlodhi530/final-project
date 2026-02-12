@@ -45,16 +45,16 @@ const registerUserValidations = [
 const loginUserValidations = [
   body("email").optional().isEmail().withMessage("Invalid email format"),
 
-  body("username")
+  body("userName")
     .optional()
     .isString()
-    .withMessage("username must be a string"),
+    .withMessage("userName must be a string"),
   body("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
   (req, res, next) => {
-    if (!req.body.email && !req.body.username) {
-      return res.status(400).json({ message: "Email or username is required" });
+    if (!req.body.email && !req.body.userName) {
+      return res.status(400).json({ message: "Email or userName is required" });
     }
     next();
   },

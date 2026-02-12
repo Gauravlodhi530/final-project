@@ -11,7 +11,7 @@ const {
 // Create Product Controller
 const createProduct = async (req, res) => {
   try {
-    let { title, description, price, priceCurrency } = req.body;
+    let { title, description, price, priceCurrency, stock } = req.body;
 
     const seller = req.user.id;
 
@@ -60,6 +60,7 @@ const createProduct = async (req, res) => {
       price: priceData,
       seller,
       images,
+      stock: stock ? Number(stock) : 0,
     });
 
     return res.status(201).json({
@@ -178,10 +179,11 @@ async function updateProduct(req, res) {
       return res.status(403).json({ success: false, message: "forbidden: " });
     }
 
-    const { title, description, price } = req.body;
+    const { title, description, price, stock } = req.body;
 
     if (title) product.title = title;
     if (description) product.description = description;
+    if (stock !== undefined) product.stock = Number(stock);
 
     if (price !== undefined) {
       let { amount, currency } = product.price;
