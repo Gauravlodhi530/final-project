@@ -2,7 +2,7 @@ const usermodel = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const redis = require("../db/redis");
-
+const { publishToQueue } = require("../broker/broker");
 module.exports.registerUser = async (req, res) => {
   try {
     const {
@@ -10,7 +10,7 @@ module.exports.registerUser = async (req, res) => {
       email,
       password,
       fullName: { firstName, lastName },
-      role
+      role,
     } = req.body;
     const isUserExists = await usermodel.findOne({ email }, { userName });
 
@@ -24,8 +24,15 @@ module.exports.registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       fullName: { firstName, lastName },
-      role: role || 'user'
+      role: role || "user",
     });
+    publishToQueue("AUTH_NOTIFICATION.USER_CREATED", {
+      id: user._id,
+      userName: user.userName,
+      email: user.email,
+      fullName: user.fullName,
+    });
+
     const token = jwt.sign(
       {
         id: user._id,
@@ -36,7 +43,7 @@ module.exports.registerUser = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
 
     res.cookie("token", token, {
@@ -74,7 +81,7 @@ module.exports.loginUser = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
     res.cookie("token", token, {
       httpOnly: true,
@@ -171,12 +178,12 @@ module.exports.deleteUserAddress = async (req, res) => {
         address: { _id: addressId },
       },
     },
-    { new: true }
+    { new: true },
   );
 
   if (!user) return res.status(404).json({ message: "User not found" });
   const addExist = user.address.same(
-    (addr) => addr.addr_id.toString() === addressId
+    (addr) => addr.addr_id.toString() === addressId,
   );
 
   if (addExist) {
@@ -189,10 +196,8 @@ module.exports.deleteUserAddress = async (req, res) => {
   // addr.remove();
   // await user.save();
 
-  return res
-    .status(200)
-    .json({
-      message: "Address removed successfully",
-      addressess: user.address,
-    });
+  return res.status(200).json({
+    message: "Address removed successfully",
+    addressess: user.address,
+  });
 };
