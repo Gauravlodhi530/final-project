@@ -1,8 +1,10 @@
+require("dotenv").config();
 const axios = require("axios");
 const paymentModel = require("../models/payment.models");
-
-require("dotenv").config();
 const Razorpay = require("razorpay");
+const { publishToQueue } = require('../broker/broker')
+
+
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -44,7 +46,10 @@ async function createPayment(req, res) {
 }
 
 async function verifyPayment(req, res) {
-  const { razorpayOrderId, razorpayPaymentId, signature } = req.body;
+  const { razorpayOrderId, paymentId, signature } = req.body;
+  if (!razorpayOrderId || !paymentId || !signature) {
+    return res.status(400).json({ message: "Missing required fields: razorpayOrderId, paymentId, signature" });
+  }
   const secret = process.env.RAZORPAY_KEY_SECRET;
 
   try {
@@ -52,12 +57,14 @@ async function verifyPayment(req, res) {
       validatePaymentVerification,
     } = require("../../node_modules/razorpay/dist/utils/razorpay-utils");
 
-    const isValid = validatePaymentVerification({
-      order_id: razorpayOrderId,
-      payment_id: razorpayPaymentId,
+    
+    const isValid = validatePaymentVerification(
+      { order_id: razorpayOrderId, payment_id: paymentId },
       signature,
-      secret,
-    });
+      secret
+    );
+    
+    console.log(secret);
     if (!isValid) {
       return res.status(400).json({ message: "Invalid payment signature" });
     }
@@ -74,10 +81,34 @@ async function verifyPayment(req, res) {
     payment.status = "completed";
     await payment.save();
 
+    await publishToQueue("PAYMENT_NOTIFICATION.PAYMENT_COMPLETED", {
+      email: req.user.email,
+      orderId: payment.order,
+      paymentId: payment._id,
+      userId: payment.user,
+      price: payment.price,
+      currency: payment.price.currency,
+      fullName: req.user.fullName,
+    });
+
     return res.status(200).json({ message: "Payment completed", payment });
+
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Error verifying payment" });
+    console.error("Payment verification error:", error.message, error);
+
+    try {
+      await publishToQueue("PAYMENT_NOTIFICATION.PAYMENT_FAILED", {
+        email: req.user.email,
+        orderId: razorpayOrderId,
+        paymentId: paymentId,
+        userId: req.user.id,
+        price: null,
+      });
+    } catch (queueError) {
+      console.error("Failed to publish payment failure notification:", queueError);
+    }
+
+    res.status(500).json({ message: "Error verifying payment", error: error.message });
   }
 }
 
