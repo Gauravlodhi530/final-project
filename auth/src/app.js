@@ -6,6 +6,11 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// Health check
+app.get('/', (req, res) => {
+    res.send('Auth Service');
+});
+
 // routes
 app.use('/api/auth', authRouter);
 

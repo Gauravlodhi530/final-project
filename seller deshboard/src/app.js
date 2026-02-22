@@ -9,5 +9,8 @@ app.use(cookiesParser())
 
 app.use('/api/seller/deshboard', sellerRouter)
 
+app.get('/', (req, res) => {
+    res.send('Seller Deshboard Service')
+})
 
 module.exports = app

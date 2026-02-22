@@ -9,6 +9,11 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// Health check
+app.get('/', (req, res) => {
+    res.send('Payment Service');
+});
+
 app.use("/api/payment", paymentRoutes);
 
 

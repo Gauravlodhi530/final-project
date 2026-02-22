@@ -10,6 +10,11 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
+// Health check
+app.get('/', (req, res) => {
+    res.send('Cart Service');
+});
+
 // Routes
 app.use("/api/cart", cartRoutes);
 

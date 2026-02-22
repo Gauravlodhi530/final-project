@@ -10,6 +10,11 @@ app.use(cookieParser())
 // Setup middleware
 setupMiddleware(app)
 
+// Health check
+app.get('/', (req, res) => {
+    res.send('Product Service');
+});
+
 // Routes
 app.use('/api/products', productRoutes)
 
