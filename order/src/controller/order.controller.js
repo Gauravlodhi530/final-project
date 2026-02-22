@@ -1,5 +1,6 @@
 const OrderModel = require("../models/order.model");
 const axios = require("axios");
+const { publishToQueue } = require("../broker/broker");
 
 async function createOrder(req, res) {
   const user = req.user;
@@ -67,6 +68,8 @@ async function createOrder(req, res) {
       shippingAddress: req.body.shippingAddress,
     });
 
+    publishToQueue("ORDER_SELLER_DESHBOARD.ORDER_CREATED", orderData);
+
     res
       .status(201)
       .json({ message: "Order created successfully", order: orderData });
@@ -98,8 +101,6 @@ async function getMYOrders(req, res) {
       page,
       limit,
     });
-
-
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json({ success: false, error: error.message });
@@ -111,7 +112,7 @@ async function getOrderById(req, res) {
     const user = req.user;
     const orderID = req.params.id;
     const order = await OrderModel.findOne({ _id: orderID });
-    
+
     if (!order) {
       return res.status(404).json({ success: false, error: "Order not found" });
     }
@@ -165,7 +166,7 @@ async function updateOrderStatus(req, res) {
 async function getSellerOrders(req, res) {
   try {
     const orders = await OrderModel.find({})
-      .populate('user', 'name email')
+      .populate("user", "name email")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -230,7 +231,11 @@ async function updateOrderAddress(req, res) {
 
     res
       .status(200)
-      .json({ success: true, message: "Order address updated successfully", order });
+      .json({
+        success: true,
+        message: "Order address updated successfully",
+        order,
+      });
   } catch (error) {
     console.error("Error updating order address:", error);
     res.status(500).json({ success: false, error: error.message });

@@ -6,7 +6,7 @@ const {
   uploadImages,
   handleUploadError,
 } = require("../services/upload.service");
-
+const {publceToQueue} = require("../broker/broker")
 
 // Create Product Controller
 const createProduct = async (req, res) => {
@@ -63,6 +63,10 @@ const createProduct = async (req, res) => {
       stock: stock ? Number(stock) : 0,
     });
 
+    await publceToQueue("PRODUCT_SELLER_DESHBOARD.PRODUCT_CREATED", product)
+    await publceToQueue("PRODUCT_NOTIFICATION.PRODUCT_CREATED", product)
+
+    
     return res.status(201).json({
       success: true,
       message: "Product created successfully",

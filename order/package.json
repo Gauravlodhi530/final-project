@@ -4,6 +4,7 @@
   "description": "Order management API",
   "main": "src/index.js",
   "dependencies": {
+    "amqplib": "^0.10.9",
     "axios": "^1.13.3",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",

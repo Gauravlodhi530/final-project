@@ -2,9 +2,7 @@ require("dotenv").config();
 const axios = require("axios");
 const paymentModel = require("../models/payment.models");
 const Razorpay = require("razorpay");
-const { publishToQueue } = require('../broker/broker')
-
-
+const { publishToQueue } = require("../broker/broker");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -38,6 +36,17 @@ async function createPayment(req, res) {
       status: "pending",
     });
 
+     await publishToQueue("PAYMENT_SELLER_DESHBOARD.PAYMENT_CREATED", payment);
+
+    await publishToQueue("PAYMENT_NOTIFICATION.PAYMENT_INITIATED", {
+      email: req.user.email,
+      orderId: orderId,
+      price: payment.price,
+      currency: payment.price.currency,
+      username: req.user.username,
+      paymentId: payment._id,
+    });
+
     return res.status(201).json({ message: "payment initiated", payment });
   } catch (error) {
     console.error(error);
@@ -48,7 +57,12 @@ async function createPayment(req, res) {
 async function verifyPayment(req, res) {
   const { razorpayOrderId, paymentId, signature } = req.body;
   if (!razorpayOrderId || !paymentId || !signature) {
-    return res.status(400).json({ message: "Missing required fields: razorpayOrderId, paymentId, signature" });
+    return res
+      .status(400)
+      .json({
+        message:
+          "Missing required fields: razorpayOrderId, paymentId, signature",
+      });
   }
   const secret = process.env.RAZORPAY_KEY_SECRET;
 
@@ -57,13 +71,12 @@ async function verifyPayment(req, res) {
       validatePaymentVerification,
     } = require("../../node_modules/razorpay/dist/utils/razorpay-utils");
 
-    
     const isValid = validatePaymentVerification(
       { order_id: razorpayOrderId, payment_id: paymentId },
       signature,
-      secret
+      secret,
     );
-    
+
     console.log(secret);
     if (!isValid) {
       return res.status(400).json({ message: "Invalid payment signature" });
@@ -81,6 +94,8 @@ async function verifyPayment(req, res) {
     payment.status = "completed";
     await payment.save();
 
+    await publishToQueue("PAYMENT_SELLER_DESHBOARD.PAYMENT_UPDATED", payment);
+
     await publishToQueue("PAYMENT_NOTIFICATION.PAYMENT_COMPLETED", {
       email: req.user.email,
       orderId: payment.order,
@@ -91,8 +106,9 @@ async function verifyPayment(req, res) {
       fullName: req.user.fullName,
     });
 
-    return res.status(200).json({ message: "Payment completed", payment });
 
+
+    return res.status(200).json({ message: "Payment completed", payment });
   } catch (error) {
     console.error("Payment verification error:", error.message, error);
 
@@ -105,10 +121,15 @@ async function verifyPayment(req, res) {
         price: null,
       });
     } catch (queueError) {
-      console.error("Failed to publish payment failure notification:", queueError);
+      console.error(
+        "Failed to publish payment failure notification:",
+        queueError,
+      );
     }
 
-    res.status(500).json({ message: "Error verifying payment", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error verifying payment", error: error.message });
   }
 }
 

@@ -26,12 +26,20 @@ module.exports.registerUser = async (req, res) => {
       fullName: { firstName, lastName },
       role: role || "user",
     });
-    publishToQueue("AUTH_NOTIFICATION.USER_CREATED", {
-      id: user._id,
-      userName: user.userName,
-      email: user.email,
-      fullName: user.fullName,
-    });
+    await Promise.all([
+      publishToQueue("AUTH_NOTIFICATION.USER_CREATED", {
+        id: user._id,
+        userName: user.userName,
+        email: user.email,
+        fullName: user.fullName,
+      }),
+      publishToQueue("AUTH_SELLER_DESHBOARD.USER_CREATED", {
+        id: user._id,
+        userName: user.userName,
+        email: user.email,
+        fullName: user.fullName,
+      }),
+    ]);
 
     const token = jwt.sign(
       {
